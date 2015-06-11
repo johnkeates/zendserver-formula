@@ -101,14 +101,6 @@ alternative-phpize:
       - pkg: zendserver
     - unless: test -L /usr/bin/phpize
 
-/etc/zendserver:
-  file.directory:
-    - makedirs: True
-    - user: root
-    - group: adm
-    - mode: 750
-    - require:
-      - pkg: zendserver
 
 # Bootstrap Zend-Server to prevent first-run wizard while accessing the admin panel
 {%- if bootstrap %}
@@ -126,21 +118,13 @@ bootstrap-zs:
 {%- if bootstrap_dev %}
 bootstrap-zs-dev:
   cmd.run:
-    - name: "api_key=`/usr/local/zend/bin/zs-manage bootstrap-single-server -p admin -a True -r False | head -n 1 | cut -f2`; echo 'grains:\n  zend-server:\n    mode: development\n    api:\n      enabled: True\n      key: '$api_key >> /etc/salt/minion.d/zendserver.conf; /usr/local/zend/bin/zs-manage restart -N admin -K $api_key"
+    - name: "api_key=`/usr/local/zend/bin/zs-manage bootstrap-single-server -p admin -a True -r False | head -n 1 | cut -f2`; echo 'grains:\n  zend-server:\n    mode: development\n    api:\n      enabled: True\n      key: '$api_key >> /etc/salt/minion.d/zendserver.conf; sleep 5; /usr/local/zend/bin/zs-manage restart -N admin -K $api_key; sleep 5"
     - require:
       - cmd: alternative-php
-#      - file: zs-admin # is executed anyway atfter this state
-    - unless: test -e /etc/zendserver/zs-admin.txt #makes sure we can't bootstrap twice
+    - unless: test -e /etc/salt/minion.d/zendserver.conf #makes sure we can't bootstrap twice
 {%- endif %}
 
-#Moved down in case salt decides to run this before bootstrapping, can still be required as a dependency
-zs-admin:
-  file.managed:
-    - name: /etc/zendserver/zs-admin.txt
-    - contents: {{ zend_admin_pass }}
-    - require:
-      - file: /etc/zendserver
-    - unless: test -e /etc/zendserver/zs-admin.txt
+
 
 {%- if webserver == 'nginx' %}
 /etc/init.d/php-fpm:
