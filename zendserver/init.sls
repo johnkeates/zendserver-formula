@@ -129,22 +129,23 @@ bootstrap-zs-dev:
     - name: "api_key=`/usr/local/zend/bin/zs-manage bootstrap-single-server -p admin -a True -r False | head -n 1 | cut -f2`; echo 'grains:\n  zend-server:\n    mode: development\n    api:\n      enabled: True\n      key: '$api_key >> /etc/salt/minion.d/zendserver.conf; /usr/local/zend/bin/zs-manage restart -N admin -K $api_key"
     - require:
       - cmd: alternative-php
-#      - file: zs-admin # is executed anyway atfter this state
-    - unless: test -e /etc/zendserver/zs-admin.txt #makes sure we can't bootstrap twice
+#       - file: zs-admin # is executed anyway atfter this state
+    - unless: test -e /etc/salt/minion.d/zendserver.conf #makes sure we can't bootstrap twice
 {%- endif %}
 
+
+# FIXME: remove in favor of API keys
 #Moved down in case salt decides to run this before bootstrapping, can still be required as a dependency
-zs-admin:
-  file.managed:
-    - name: /etc/zendserver/zs-admin.txt
-    - contents: {{ zend_admin_pass }}
-    - require:
-      - file: /etc/zendserver
-    - unless: test -e /etc/zendserver/zs-admin.txt
+#zs-admin:
+#  file.managed:
+#    - name: /etc/zendserver/zs-admin.txt
+#    - contents: {{ zend_admin_pass }}
+#    - require:
+#      - file: /etc/zendserver
+#    - unless: test -e /etc/zendserver/zs-admin.txt
 
 {%- if webserver == 'nginx' %}
 /etc/init.d/php-fpm:
   file.symlink:
     - target: /usr/local/zend/bin/php-fpm.sh
-
 {%- endif %}
