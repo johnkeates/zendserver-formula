@@ -124,11 +124,8 @@ bootstrap-zs-dev:
     - unless: test -e /etc/salt/minion.d/zendserver.conf #makes sure we can't bootstrap twice
 {%- endif %}
 
-
-
 {%- if webserver == 'nginx' %}
 /etc/init.d/php-fpm:
   file.symlink:
     - target: /usr/local/zend/bin/php-fpm.sh
-
 {%- endif %}
